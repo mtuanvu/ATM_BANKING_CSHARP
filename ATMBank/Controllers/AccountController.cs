@@ -5,20 +5,24 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace ATMBank.Controllers {
+namespace ATMBank.Controllers
+{
     [ApiController]
     [Route("api/accounts")]
     [Authorize] // Yêu cầu JWT token
-    public class AccountController : ControllerBase {
+    public class AccountController : ControllerBase
+    {
         private readonly ATMContext _context;
 
-        public AccountController(ATMContext context) {
+        public AccountController(ATMContext context)
+        {
             _context = context;
         }
 
         // API lấy thông tin tài khoản của người dùng hiện tại
         [HttpGet]
-        public IActionResult GetUserAccounts() {
+        public IActionResult GetUserAccounts()
+        {
             // Lấy UserId từ JWT token
             var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
 
@@ -32,7 +36,8 @@ namespace ATMBank.Controllers {
 
         // API lấy thông tin chi tiết của một tài khoản
         [HttpGet("{accountId}")]
-        public IActionResult GetAccountById(int accountId) {
+        public IActionResult GetAccountById(int accountId)
+        {
             // Lấy UserId từ JWT token
             var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
 
@@ -40,7 +45,8 @@ namespace ATMBank.Controllers {
             var account = _context.Accounts
                 .FirstOrDefault(a => a.AccountId == accountId && a.UserId == userId);
 
-            if (account == null) {
+            if (account == null)
+            {
                 return NotFound("Account not found or access denied.");
             }
 
@@ -49,7 +55,8 @@ namespace ATMBank.Controllers {
 
         // API tạo tài khoản mới
         [HttpPost]
-        public IActionResult CreateAccount([FromBody] Account account) {
+        public IActionResult CreateAccount([FromBody] Account account)
+        {
             // Lấy UserId từ JWT token
             var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
 
@@ -64,30 +71,31 @@ namespace ATMBank.Controllers {
         }
 
         // API cập nhật số dư tài khoản
-        [HttpPut("{accountId}/balance")]
-        public IActionResult UpdateAccountBalance(int accountId, [FromBody] UpdateBalanceRequest request)
+        [HttpPost("update-balance")]
+        public IActionResult UpdateAccountBalance([FromBody] UpdateBalanceRequest request)
         {
-            // Lấy UserId từ JWT token
             var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
 
             // Tìm tài khoản và đảm bảo tài khoản thuộc về người dùng
-            var account = _context.Accounts.FirstOrDefault(a => a.AccountId == accountId && a.UserId == userId);
+            var account = _context.Accounts.FirstOrDefault(a => a.AccountId == request.AccountId && a.UserId == userId);
 
             if (account == null)
             {
-                return NotFound("Account not found or access denied.");
+                return NotFound(new { error = "Account not found or access denied." });
             }
 
             // Cập nhật số dư
             account.Balance += request.Amount;
             _context.SaveChanges();
 
-           return Ok(new { message = "Account balance updated successfully." });
+            return Ok(new { message = "Account balance updated successfully." });
         }
+
 
         // API xóa tài khoản
         [HttpDelete("{accountId}")]
-        public IActionResult DeleteAccount(int accountId) {
+        public IActionResult DeleteAccount(int accountId)
+        {
             // Lấy UserId từ JWT token
             var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
 
@@ -95,7 +103,8 @@ namespace ATMBank.Controllers {
             var account = _context.Accounts
                 .FirstOrDefault(a => a.AccountId == accountId && a.UserId == userId);
 
-            if (account == null) {
+            if (account == null)
+            {
                 return NotFound("Account not found or access denied.");
             }
 

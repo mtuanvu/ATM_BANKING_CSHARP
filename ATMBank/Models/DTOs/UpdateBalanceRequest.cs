@@ -2,6 +2,7 @@ namespace ATMBank.Models.DTOs
 {
     public class UpdateBalanceRequest
     {
-        public decimal Amount { get; set; } // Số tiền cần cập nhật
+        public int AccountId { get; set; }
+        public decimal Amount { get; set; }
     }
 }

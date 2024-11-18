@@ -112,3 +112,4 @@ D:\GitHub\CSharp\ATMApp\ATMBank\obj\Debug\net8.0\ATMBank.pdb
 D:\GitHub\CSharp\ATMApp\ATMBank\obj\Debug\net8.0\ATMBank.genruntimeconfig.cache
 D:\GitHub\CSharp\ATMApp\ATMBank\obj\Debug\net8.0\ref\ATMBank.dll
 D:\GitHub\CSharp\ATMApp\ATMBank\bin\Debug\net8.0\BCrypt.Net-Next.dll
+D:\GitHub\CSharp\ATMApp\ATMBank\obj\Debug\net8.0\ATMBank.sourcelink.json
