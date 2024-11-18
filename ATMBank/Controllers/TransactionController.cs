@@ -124,10 +124,9 @@ public async Task<IActionResult> Transfer([FromBody] TransferRequestDto transfer
         Status = "Success",
         Timestamp = DateTime.Now,
         Description = transferRequest.Description ?? $"Nhận tiền từ tài khoản {transferRequest.AccountId} ({transferRequest.SenderName})",
-        UserId = destinationAccount.UserId // Người sở hữu tài khoản đích
+        UserId = destinationAccount.UserId
     };
 
-    // Lưu giao dịch vào cơ sở dữ liệu
     _context.Transactions.Add(sourceTransaction);
     _context.Transactions.Add(destinationTransaction);
     await _context.SaveChangesAsync();
@@ -137,8 +136,6 @@ public async Task<IActionResult> Transfer([FromBody] TransferRequestDto transfer
 
 
 
-
-        // API lấy tất cả giao dịch của người dùng
         [HttpGet]
         public async Task<IActionResult> GetAllTransactions()
         {

@@ -6,15 +6,14 @@ const { Option } = Select;
 
 function Deposit() {
   const [loading, setLoading] = useState(false);
-  const [accounts, setAccounts] = useState([]); // Danh sách tài khoản
-  const [selectedAccount, setSelectedAccount] = useState(null); // Tài khoản được chọn
-  const [transactionType] = useState('deposit'); // Loại giao dịch, mặc định là "deposit"
+  const [accounts, setAccounts] = useState([]);
+  const [selectedAccount, setSelectedAccount] = useState(null);
+  const [transactionType] = useState('deposit');
 
   useEffect(() => {
     fetchAccounts();
   }, []);
 
-  // Fetch danh sách tài khoản
   const fetchAccounts = async () => {
     const token = localStorage.getItem('token');
     try {
@@ -23,14 +22,13 @@ function Deposit() {
           Authorization: `Bearer ${token}`,
         },
       });
-      setAccounts(response.data); // Lưu danh sách tài khoản vào state
+      setAccounts(response.data);
     } catch (error) {
       console.error('Error fetching accounts:', error);
       message.error('Failed to fetch accounts.');
     }
   };
 
-  // Gửi giao dịch (deposit)
   const handleDeposit = async (values) => {
     setLoading(true);
     const token = localStorage.getItem('token');
@@ -43,10 +41,10 @@ function Deposit() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          accountId: selectedAccount, // ID tài khoản được chọn
+          accountId: selectedAccount,
           amount: values.amount,
-          transactionType: transactionType, // Loại giao dịch mặc định là "deposit"
-          description: 'Deposit money', // Mô tả giao dịch
+          transactionType: transactionType,
+          description: 'Deposit money',
         }),
       });
 
@@ -54,9 +52,8 @@ function Deposit() {
 
       if (response.ok) {
         message.success(data.message || 'Deposit successful');
-        // Gọi lại API để lấy danh sách tài khoản mới
         fetchAccounts();
-        setSelectedAccount(null); // Reset tài khoản được chọn
+        setSelectedAccount(null);
       } else {
         message.error(data.error || 'Error occurred while depositing money');
       }
@@ -75,8 +72,8 @@ function Deposit() {
         <Form.Item label="Select Account" required>
           <Select
             placeholder="Select an account"
-            onChange={(value) => setSelectedAccount(value)} // Cập nhật tài khoản được chọn
-            value={selectedAccount || undefined} // Hiển thị tài khoản được chọn
+            onChange={(value) => setSelectedAccount(value)}
+            value={selectedAccount || undefined}
           >
             {accounts.map((account) => (
               <Option key={account.accountId} value={account.accountId}>

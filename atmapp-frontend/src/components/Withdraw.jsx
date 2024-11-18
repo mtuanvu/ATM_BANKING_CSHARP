@@ -6,8 +6,8 @@ const { Option } = Select;
 
 function Withdraw() {
   const [loading, setLoading] = useState(false);
-  const [accounts, setAccounts] = useState([]); // Danh sách tài khoản
-  const [selectedAccount, setSelectedAccount] = useState(null); // Tài khoản được chọn
+  const [accounts, setAccounts] = useState([]);
+  const [selectedAccount, setSelectedAccount] = useState(null); 
 
   useEffect(() => {
     fetchAccounts();
@@ -23,11 +23,11 @@ function Withdraw() {
       });
       setAccounts(response.data);
       if (response.data.length > 0) {
-        setSelectedAccount(response.data[0].accountId); // Tự động chọn tài khoản đầu tiên
+        setSelectedAccount(response.data[0].accountId);
       }
     } catch (error) {
-      console.error('Lỗi khi lấy danh sách tài khoản:', error);
-      message.error('Không thể lấy danh sách tài khoản.');
+      console.error('Error while getting account list:', error);
+      message.error('Unable to get account list.');
     }
   };
 
@@ -45,21 +45,21 @@ function Withdraw() {
         body: JSON.stringify({
           accountId: selectedAccount,
           amount: values.amount,
-          transactionType: 'withdraw', // Mặc định là "Withdraw"
+          transactionType: 'Withdraw',
         }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        message.success('Giao dịch rút tiền thành công!');
-        await fetchAccounts(); // Cập nhật danh sách tài khoản
+        message.success('Withdrawal transaction successful!');
+        await fetchAccounts();
       } else {
-        message.error(data.error || 'Giao dịch thất bại.');
+        message.error(data.error || 'Transaction failed.');
       }
     } catch (error) {
       console.error('Error:', error);
-      message.error('Lỗi máy chủ.');
+      message.error('Server error.');
     } finally {
       setLoading(false);
     }
@@ -67,16 +67,16 @@ function Withdraw() {
 
   return (
     <div style={{ maxWidth: '400px', margin: 'auto', paddingTop: '50px' }}>
-      <h2>Rút Tiền</h2>
+      <h2>Deposit</h2>
       <Form name="withdraw" onFinish={handleWithdraw} layout="vertical">
-        <Form.Item label="Chọn Tài Khoản" required>
+        <Form.Item label="Select Account" required>
           <Select
-            placeholder="Chọn tài khoản"
+            placeholder="Select Account"
             onChange={(value) => setSelectedAccount(value)}
           >
             {accounts.map((account) => (
               <Option key={account.accountId} value={account.accountId}>
-                Tài Khoản ID: {account.accountId} | Số Dư: ${account.balance}
+                Account ID: {account.accountId} | Balance: ${account.balance}
               </Option>
             ))}
           </Select>
@@ -85,16 +85,16 @@ function Withdraw() {
        
 
         <Form.Item
-          label="Số Tiền"
+          label="Amount"
           name="amount"
           rules={[
-            { required: true, message: 'Vui lòng nhập số tiền!' },
-            { validator: (_, value) => value > 0 ? Promise.resolve() : Promise.reject(new Error('Số tiền phải lớn hơn 0!')) },
+            { required: true, message: 'Please enter amount!' },
+            { validator: (_, value) => value > 0 ? Promise.resolve() : Promise.reject(new Error('Amount must be greater than 0!')) },
           ]}
         >
-          <Input type="number" placeholder="Nhập số tiền muốn rút" />
+          <Input type="number" placeholder="Enter the amount you want to withdraw" />
         </Form.Item>
-        <Form.Item label="Loại Giao Dịch">
+        <Form.Item label="Transaction Type">
           <Input value="Withdraw" disabled />
         </Form.Item>
 
