@@ -5,6 +5,8 @@ namespace ATMBank.Models {
         [Key]
         public int AccountId { get; set; }
         public int UserId { get; set; }
+
+         public User User { get; set; }
         public decimal Balance { get; set; }
     }
 }

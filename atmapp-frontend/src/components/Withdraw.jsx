@@ -1,100 +1,111 @@
-import React, { useState } from 'react';
-import { Form, Input, Button, message } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Form, Input, Button, message, Select } from 'antd';
 import axios from 'axios';
 
-const Withdraw = () => {
+const { Option } = Select;
+
+function Withdraw() {
   const [loading, setLoading] = useState(false);
+  const [accounts, setAccounts] = useState([]); // Danh sách tài khoản
+  const [selectedAccount, setSelectedAccount] = useState(null); // Tài khoản được chọn
 
-  const withdrawMoney = async (data) => {
+  useEffect(() => {
+    fetchAccounts();
+  }, []);
+
+  const fetchAccounts = async () => {
+    const token = localStorage.getItem('token');
     try {
-      const res = await axios.post('http://localhost:5000/withdraw', data, {
+      const response = await axios.get('http://localhost:5030/api/accounts', {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
-      return res;
+      setAccounts(response.data);
+      if (response.data.length > 0) {
+        setSelectedAccount(response.data[0].accountId); // Tự động chọn tài khoản đầu tiên
+      }
     } catch (error) {
-      console.error('Error during withdrawal request:', error);
-      throw error;
+      console.error('Lỗi khi lấy danh sách tài khoản:', error);
+      message.error('Không thể lấy danh sách tài khoản.');
     }
   };
 
-  const requestOtp = async () => {
-    try {
-      await axios.post('http://localhost:5000/request_otp', {
-        email: localStorage.getItem('email')
-      }, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      message.success('OTP has been sent to your email.');
-    } catch (error) {
-      message.error('Failed to send OTP.');
-    }
-  };
-
-  const onFinish = (values) => {
+  const handleWithdraw = async (values) => {
     setLoading(true);
-    withdrawMoney(values)
-      .then((res) => {
-        if (res && res.data && res.data.message) {
-          message.success(res.data.message);
-        } else {
-          message.error('Withdrawal failed');
-        }
-      })
-      .catch((error) => {
-        if (error.response && error.response.data && error.response.data.error) {
-          message.error(error.response.data.error);
-        } else {
-          message.error('Server error during withdrawal');
-        }
-      })
-      .finally(() => {
-        setLoading(false);
+    const token = localStorage.getItem('token');
+
+    try {
+      const response = await fetch('http://localhost:5030/api/transactions/enqueue', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          accountId: selectedAccount,
+          amount: values.amount,
+          transactionType: 'withdraw', // Mặc định là "Withdraw"
+        }),
       });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        message.success('Giao dịch rút tiền thành công!');
+        await fetchAccounts(); // Cập nhật danh sách tài khoản
+      } else {
+        message.error(data.error || 'Giao dịch thất bại.');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      message.error('Lỗi máy chủ.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div style={{ maxWidth: '400px', margin: 'auto', paddingTop: '50px' }}>
-      <h2>Withdraw Money</h2>
-      <Button onClick={requestOtp}>Request OTP</Button> {/* Nút để yêu cầu OTP */}
-      <Form name="withdraw" onFinish={onFinish} layout="vertical">
-        <Form.Item
-          label="Account ID"
-          name="account_id"
-          rules={[{ required: true, message: 'Please input your account ID!' }]}
-        >
-          <Input placeholder="Enter your Account ID" />
+      <h2>Rút Tiền</h2>
+      <Form name="withdraw" onFinish={handleWithdraw} layout="vertical">
+        <Form.Item label="Chọn Tài Khoản" required>
+          <Select
+            placeholder="Chọn tài khoản"
+            onChange={(value) => setSelectedAccount(value)}
+          >
+            {accounts.map((account) => (
+              <Option key={account.accountId} value={account.accountId}>
+                Tài Khoản ID: {account.accountId} | Số Dư: ${account.balance}
+              </Option>
+            ))}
+          </Select>
         </Form.Item>
 
+       
+
         <Form.Item
-          label="Amount"
+          label="Số Tiền"
           name="amount"
-          rules={[{ required: true, message: 'Please input the amount!' }]}
+          rules={[
+            { required: true, message: 'Vui lòng nhập số tiền!' },
+            { validator: (_, value) => value > 0 ? Promise.resolve() : Promise.reject(new Error('Số tiền phải lớn hơn 0!')) },
+          ]}
         >
-          <Input type="number" placeholder="Enter amount to withdraw" />
+          <Input type="number" placeholder="Nhập số tiền muốn rút" />
         </Form.Item>
-
-        <Form.Item
-          label="OTP Code"
-          name="otp_code"
-          rules={[{ required: true, message: 'Please input the OTP code!' }]}
-        >
-          <Input placeholder="Enter OTP code" />
+        <Form.Item label="Loại Giao Dịch">
+          <Input value="Withdraw" disabled />
         </Form.Item>
 
         <Form.Item>
           <Button type="primary" htmlType="submit" loading={loading} block>
-            Withdraw
+            Rút Tiền
           </Button>
         </Form.Item>
       </Form>
     </div>
   );
-};
+}
 
 export default Withdraw;

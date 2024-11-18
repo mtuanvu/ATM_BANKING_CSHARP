@@ -8,8 +8,8 @@ namespace ATMBank.Models {
         public int AccountId { get; set; } // Thêm để xác định tài khoản liên quan
         public decimal Amount { get; set; }
         public DateTime Timestamp { get; set; } = DateTime.Now;
-        public string Status { get; set; } // Pending, Success, Failed
+        public string? Status { get; set; } // Pending, Success, Failed
         public string TransactionType { get; set; } // deposit, withdraw
-        public string Description { get; set; }
+        public string? Description { get; set; }
     }
 }

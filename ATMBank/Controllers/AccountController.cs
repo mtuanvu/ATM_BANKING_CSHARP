@@ -34,6 +34,31 @@ namespace ATMBank.Controllers
             return Ok(accounts);
         }
 
+
+        [HttpPost("check/account")]
+        public async Task<IActionResult> CheckReceiver([FromBody] CheckReceiverRequest request)
+        {
+            Console.WriteLine($"Received request for AccountId: {request.AccountId}");
+            var account = await _context.Accounts
+                .Include(a => a.User)
+                .FirstOrDefaultAsync(a => a.AccountId == request.AccountId);
+
+            if (account == null)
+            {
+                Console.WriteLine("Account not found.");
+                return NotFound(new { error = "Tài khoản người nhận không tồn tại." });
+            }
+
+            Console.WriteLine($"Account found: {account.User.Name}");
+            return Ok(new
+            {
+                receiver_name = account.User.Name,
+                account_id = account.AccountId
+            });
+        }
+
+
+
         // API lấy thông tin chi tiết của một tài khoản
         [HttpGet("{accountId}")]
         public IActionResult GetAccountById(int accountId)
