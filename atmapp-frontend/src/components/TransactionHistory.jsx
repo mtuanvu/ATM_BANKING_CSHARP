@@ -30,10 +30,19 @@ const TransactionHistory = () => {
     { title: 'Account ID', dataIndex: 'accountId', key: 'accountId' },
     { title: 'Amount', dataIndex: 'amount', key: 'amount' },
     { title: 'Status', dataIndex: 'status', key: 'status' },
+    { title: 'Transaction Type', dataIndex: 'transactionType', key: 'transactionType' }, // Thêm cột loại giao dịch
+    { title: 'Description', dataIndex: 'description', key: 'description' }, // Thêm cột mô tả
     { title: 'Timestamp', dataIndex: 'timestamp', key: 'timestamp' },
   ];
 
-  return <Table columns={columns} dataSource={data} loading={loading} />;
+  return (
+    <Table
+      columns={columns}
+      dataSource={data}
+      loading={loading}
+      rowKey={(record) => record.transactionId}
+    />
+  );
 };
 
 export default TransactionHistory;
