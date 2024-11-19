@@ -7,6 +7,7 @@ import Deposit from './components/Deposit';
 import Withdraw from './components/Withdraw';
 import Transfer from './components/Transfer';
 import TransactionHistory from './components/TransactionHistory';
+import AccountManagement from './components/AccountManagement';
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path='/accountManagement' element={<AccountManagement/>}/>
         <Route path="/deposit" element={<Deposit />} />
         <Route path="/withdraw" element={<Withdraw />} />
         <Route path="/transfer" element={<Transfer />} />

@@ -45,7 +45,7 @@ namespace ATMBank.Controllers
             if (account == null)
             {
                 Console.WriteLine("Account not found.");
-                return NotFound(new { error = "Tài khoản người nhận không tồn tại." });
+                return NotFound(new { error = "Recipient account does not exist." });
             }
 
             Console.WriteLine($"Account found: {account.User.Name}");
@@ -77,18 +77,23 @@ namespace ATMBank.Controllers
 
         //Create account
         [HttpPost]
-        public IActionResult CreateAccount([FromBody] Account account)
+        public IActionResult CreateAccount([FromBody] CreateAccountRequest createAccount)
         {
             var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
 
-            account.UserId = userId;
-            account.Balance = 0;
+            var account = new Account
+            {
+                UserId = userId,
+                Balance = createAccount.Balance,
+                Type = createAccount.Type 
+            };
 
             _context.Accounts.Add(account);
             _context.SaveChanges();
 
             return Ok("Account created successfully.");
         }
+
 
 
         // API xóa tài khoản

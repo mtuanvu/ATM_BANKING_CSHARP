@@ -38,7 +38,7 @@ namespace ATMBank.Controllers
                 return BadRequest(new { error = "Balance is not enough to make the transaction." });
             }
 
-            if (transaction.TransactionType == "Deposit")
+            if (transaction.TransactionType == "deposit")
             {
                 account.Balance += transaction.Amount;
             }

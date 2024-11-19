@@ -37,21 +37,25 @@ const AppHeader = () => {
           </>
         ) : (
           <>
-            <Menu.Item key="3">
-              <Link to="/deposit">Deposit</Link>
+          <Menu.Item key="3">
+              <Link to="/accountManagement">Account</Link>
             </Menu.Item>
             <Menu.Item key="4">
-              <Link to="/withdraw">Withdraw</Link>
+              <Link to="/deposit">Deposit</Link>
             </Menu.Item>
             <Menu.Item key="5">
-              <Link to="/transfer">Transfer</Link>
+              <Link to="/withdraw">Withdraw</Link>
             </Menu.Item>
             <Menu.Item key="6">
+              <Link to="/transfer">Transfer</Link>
+            </Menu.Item>
+            <Menu.Item key="7">
               <Link to="/transactionHistory">History</Link>
             </Menu.Item>
-            <Menu.Item key="7" onClick={handleLogout}>
+            <Menu.Item key="8" onClick={handleLogout} style={{ marginLeft: 'auto' }}>
               Logout
             </Menu.Item>
+            
           </>
         )}
       </Menu>
