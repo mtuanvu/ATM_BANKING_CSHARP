@@ -19,120 +19,106 @@ namespace ATMBank.Controllers
             _context = context;
         }
 
-        // API thêm giao dịch vào database
+        //Deposit and Withdraw
         [HttpPost("enqueue")]
         public async Task<IActionResult> EnqueueTransaction([FromBody] Transaction transaction)
         {
-            // Lấy UserId từ JWT Token
             transaction.UserId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
 
-            // Kiểm tra tài khoản có tồn tại không
             var account = await _context.Accounts.FirstOrDefaultAsync(a => a.AccountId == transaction.AccountId && a.UserId == transaction.UserId);
             if (account == null)
             {
-                transaction.Status = "Failed"; // Trạng thái thất bại nếu tài khoản không tồn tại
-                return BadRequest(new { error = "Tài khoản không tồn tại hoặc không thuộc về người dùng." });
+                transaction.Status = "Failed";
+                return BadRequest(new { error = "Account does not exist or does not belong to the user." });
             }
 
-            // Kiểm tra số dư nếu giao dịch là rút tiền
-            if (transaction.TransactionType == "withdraw" && account.Balance < transaction.Amount)
+            if (transaction.TransactionType == "Withdraw" && account.Balance < transaction.Amount)
             {
                 transaction.Status = "Failed";
-                return BadRequest(new { error = "Số dư không đủ để thực hiện giao dịch." });
+                return BadRequest(new { error = "Balance is not enough to make the transaction." });
             }
 
-            // Cập nhật số dư tài khoản
-            if (transaction.TransactionType == "deposit")
+            if (transaction.TransactionType == "Deposit")
             {
                 account.Balance += transaction.Amount;
             }
-            else if (transaction.TransactionType == "withdraw")
+            else if (transaction.TransactionType == "Withdraw")
             {
                 account.Balance -= transaction.Amount;
             }
 
-            // Lưu thông tin giao dịch vào cơ sở dữ liệu
             transaction.Timestamp = DateTime.Now;
             transaction.Status = "Success";
-            transaction.Description ??= "Giao dịch hoàn tất thành công";
+            transaction.Description ??= "Transaction completed successfully";
 
             _context.Transactions.Add(transaction);
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = "Giao dịch được thêm thành công." });
+            return Ok(new { message = "Transaction added successfully." });
         }
 
 
-[HttpPost("transfer")]
-public async Task<IActionResult> Transfer([FromBody] TransferRequestDto transferRequest)
-{
-    // Lấy UserId từ JWT token
-    var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
+        [HttpPost("transfer")]
+        public async Task<IActionResult> Transfer([FromBody] TransferRequestDto transferRequest)
+        {
+            var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
 
-    // Lấy thông tin tài khoản nguồn
-    var sourceAccount = await _context.Accounts
-        .Include(a => a.User)
-        .FirstOrDefaultAsync(a => a.AccountId == transferRequest.AccountId && a.UserId == userId);
-    if (sourceAccount == null)
-    {
-        return BadRequest(new { error = "Tài khoản nguồn không tồn tại hoặc không thuộc về người dùng." });
-    }
+            var sourceAccount = await _context.Accounts
+                .Include(a => a.User)
+                .FirstOrDefaultAsync(a => a.AccountId == transferRequest.AccountId && a.UserId == userId);
+            if (sourceAccount == null)
+            {
+                return BadRequest(new { error = "The source account does not exist or does not belong to the user.." });
+            }
 
-    // Lấy tên người gửi
-    transferRequest.SenderName = sourceAccount.User.Name;
+            transferRequest.SenderName = sourceAccount.User.Name;
 
-    // Lấy thông tin tài khoản đích
-    var destinationAccount = await _context.Accounts
-        .Include(a => a.User)
-        .FirstOrDefaultAsync(a => a.AccountId == transferRequest.DestinationAccountId);
-    if (destinationAccount == null)
-    {
-        return BadRequest(new { error = "Tài khoản đích không tồn tại." });
-    }
+            var destinationAccount = await _context.Accounts
+                .Include(a => a.User)
+                .FirstOrDefaultAsync(a => a.AccountId == transferRequest.DestinationAccountId);
+            if (destinationAccount == null)
+            {
+                return BadRequest(new { error = "Destination account does not exist." });
+            }
 
-    // Lấy tên người nhận
-    transferRequest.ReceiverName = destinationAccount.User.Name;
+            transferRequest.ReceiverName = destinationAccount.User.Name;
 
-    // Kiểm tra số dư tài khoản nguồn
-    if (sourceAccount.Balance < transferRequest.Amount)
-    {
-        return BadRequest(new { error = "Số dư tài khoản nguồn không đủ để thực hiện giao dịch." });
-    }
+            if (sourceAccount.Balance < transferRequest.Amount)
+            {
+                return BadRequest(new { error = "Source account balance is insufficient to execute the transaction." });
+            }
 
-    // Cập nhật số dư
-    sourceAccount.Balance -= transferRequest.Amount;
-    destinationAccount.Balance += transferRequest.Amount;
+            sourceAccount.Balance -= transferRequest.Amount;
+            destinationAccount.Balance += transferRequest.Amount;
 
-    // Tạo giao dịch cho tài khoản nguồn
-    var sourceTransaction = new Transaction
-    {
-        AccountId = transferRequest.AccountId,
-        Amount = transferRequest.Amount,
-        TransactionType = "Transfer",
-        Status = "Success",
-        Timestamp = DateTime.Now,
-        Description = transferRequest.Description ?? $"Chuyển tiền tới tài khoản {transferRequest.DestinationAccountId} ({transferRequest.ReceiverName})",
-        UserId = userId
-    };
+            var sourceTransaction = new Transaction
+            {
+                AccountId = transferRequest.AccountId,
+                Amount = transferRequest.Amount,
+                TransactionType = "Transfer",
+                Status = "Success",
+                Timestamp = DateTime.Now,
+                Description = transferRequest.Description ?? $"Transfer money to account {transferRequest.DestinationAccountId} ({transferRequest.ReceiverName})",
+                UserId = userId
+            };
 
-    // Tạo giao dịch cho tài khoản đích
-    var destinationTransaction = new Transaction
-    {
-        AccountId = transferRequest.DestinationAccountId,
-        Amount = transferRequest.Amount,
-        TransactionType = "Transfer",
-        Status = "Success",
-        Timestamp = DateTime.Now,
-        Description = transferRequest.Description ?? $"Nhận tiền từ tài khoản {transferRequest.AccountId} ({transferRequest.SenderName})",
-        UserId = destinationAccount.UserId
-    };
+            var destinationTransaction = new Transaction
+            {
+                AccountId = transferRequest.DestinationAccountId,
+                Amount = transferRequest.Amount,
+                TransactionType = "Transfer",
+                Status = "Success",
+                Timestamp = DateTime.Now,
+                Description = transferRequest.Description ?? $"Receive money from account {transferRequest.AccountId} ({transferRequest.SenderName})",
+                UserId = destinationAccount.UserId
+            };
 
-    _context.Transactions.Add(sourceTransaction);
-    _context.Transactions.Add(destinationTransaction);
-    await _context.SaveChangesAsync();
+            _context.Transactions.Add(sourceTransaction);
+            _context.Transactions.Add(destinationTransaction);
+            await _context.SaveChangesAsync();
 
-    return Ok(new { message = "Chuyển tiền thành công." });
-}
+            return Ok(new { message = "Transfer successful." });
+        }
 
 
 

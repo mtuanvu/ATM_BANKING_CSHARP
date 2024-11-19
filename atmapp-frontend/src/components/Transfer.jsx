@@ -6,15 +6,14 @@ const { Option } = Select;
 
 const Transfer = () => {
   const [loading, setLoading] = useState(false);
-  const [accounts, setAccounts] = useState([]); // Danh sách tài khoản của người gửi
-  const [selectedAccount, setSelectedAccount] = useState(null); // Tài khoản người gửi được chọn
-  const [receiverName, setReceiverName] = useState(""); // Tên người nhận
+  const [accounts, setAccounts] = useState([]);
+  const [selectedAccount, setSelectedAccount] = useState(null);
+  const [receiverName, setReceiverName] = useState("");
 
   useEffect(() => {
     fetchAccounts();
   }, []);
 
-  // Lấy danh sách tài khoản người gửi
   const fetchAccounts = async () => {
     const token = localStorage.getItem("token");
     try {
@@ -23,18 +22,17 @@ const Transfer = () => {
           Authorization: `Bearer ${token}`,
         },
       });
-      setAccounts(response.data); // Lưu danh sách tài khoản vào state
+      setAccounts(response.data);
     } catch (error) {
       console.error("Error fetching accounts:", error);
       message.error("Failed to fetch your accounts. Please try again.");
     }
   };
 
-  // Kiểm tra thông tin tài khoản người nhận
   const checkReceiver = async (receiverAccountId) => {
     try {
       const res = await axios.post(
-        "http://localhost:5030/api/accounts/check/account", // API kiểm tra tài khoản người nhận
+        "http://localhost:5030/api/accounts/check/account",
         { AccountId: receiverAccountId },
         {
           headers: {
@@ -45,7 +43,7 @@ const Transfer = () => {
       );
 
       if (res.data && res.data.receiver_name) {
-        setReceiverName(res.data.receiver_name); // Lưu tên người nhận
+        setReceiverName(res.data.receiver_name);
       } else {
         message.error("Receiver account does not exist.");
         setReceiverName("");
@@ -57,7 +55,6 @@ const Transfer = () => {
     }
   };
 
-  // Xử lý chuyển tiền
   const handleTransfer = async (values) => {
     setLoading(true);
     const token = localStorage.getItem("token");
@@ -66,12 +63,12 @@ const Transfer = () => {
       const response = await axios.post(
         "http://localhost:5030/api/transactions/transfer",
         {
-          AccountId: selectedAccount, // ID tài khoản nguồn
-          DestinationAccountId: values.to_account_id, // ID tài khoản đích
-          Amount: parseFloat(values.amount), // Số tiền
+          AccountId: selectedAccount,
+          DestinationAccountId: values.to_account_id,
+          Amount: parseFloat(values.amount),
           SenderName: accounts.find((a) => a.accountId === selectedAccount)
-            ?.userName || "Unknown", // Lấy tên người gửi từ tài khoản được chọn
-          ReceiverName: receiverName, // Tên người nhận
+            ?.userName || "Unknown",
+          ReceiverName: receiverName,
           Description: values.description || "No description provided",
         },
         {
@@ -85,7 +82,7 @@ const Transfer = () => {
       if (response.data.message) {
         message.success(response.data.message);
         setReceiverName("");
-        fetchAccounts(); // Làm mới danh sách tài khoản
+        fetchAccounts();
       } else {
         message.error("Unexpected response from the server.");
       }
@@ -102,7 +99,7 @@ const Transfer = () => {
   const handleReceiverChange = (e) => {
     const accountId = e.target.value;
     if (accountId) {
-      checkReceiver(accountId); // Kiểm tra thông tin tài khoản người nhận
+      checkReceiver(accountId);
     } else {
       setReceiverName("");
     }
@@ -112,7 +109,6 @@ const Transfer = () => {
     <div style={{ maxWidth: "400px", margin: "auto", paddingTop: "50px" }}>
       <h2>Transfer Money</h2>
       <Form name="transfer" onFinish={handleTransfer} layout="vertical">
-        {/* Chọn tài khoản nguồn */}
         <Form.Item
           label="From Account ID"
           name="from_account_id"
@@ -120,7 +116,7 @@ const Transfer = () => {
         >
           <Select
             placeholder="Select your account"
-            onChange={(value) => setSelectedAccount(value)} // Cập nhật tài khoản nguồn
+            onChange={(value) => setSelectedAccount(value)}
           >
             {accounts.map((account) => (
               <Option key={account.accountId} value={account.accountId}>
@@ -130,7 +126,6 @@ const Transfer = () => {
           </Select>
         </Form.Item>
 
-        {/* Nhập ID tài khoản đích */}
         <Form.Item
           label="To Account ID"
           name="to_account_id"
@@ -138,18 +133,16 @@ const Transfer = () => {
         >
           <Input
             placeholder="Enter the receiver's account ID"
-            onChange={handleReceiverChange} // Gọi hàm kiểm tra tài khoản người nhận
+            onChange={handleReceiverChange}
           />
         </Form.Item>
 
-        {/* Hiển thị tên người nhận */}
         {receiverName && (
           <div style={{ marginBottom: "16px", color: "green" }}>
             Receiver Name: {receiverName}
           </div>
         )}
 
-        {/* Nhập số tiền chuyển */}
         <Form.Item
           label="Amount"
           name="amount"
@@ -158,16 +151,14 @@ const Transfer = () => {
           <Input type="number" placeholder="Enter amount to transfer" />
         </Form.Item>
 
-        {/* Nhập mô tả giao dịch */}
         <Form.Item
           label="Description"
           name="description"
-          rules={[{ required: false }]} // Không bắt buộc nhập mô tả
+          rules={[{ required: false }]}
         >
           <Input placeholder="Enter description (optional)" />
         </Form.Item>
 
-        {/* Nút chuyển tiền */}
         <Form.Item>
           <Button type="primary" htmlType="submit" loading={loading} block>
             Transfer
